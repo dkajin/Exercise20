@@ -1,0 +1,10 @@
+library(Exercise20)
+library(data.table)
+library(lubridate)
+library(Hmisc)
+
+data <- fread("transactions.csv")
+data[,TransDate:=dmy(TransDate)]
+
+res <- calculateRFM(data, 0.2, 0.2, 0.6)
+head(res)

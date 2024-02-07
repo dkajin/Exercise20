@@ -1,0 +1,72 @@
+setwd("C:/Users/domin/OneDrive - Universität Zürich UZH/FS2024/R - a non-technical intro to big data techinques, team work and interactive visualization")
+
+#How to execute SQL queries in R 
+dbGetQuery(con, "SELECT * FROM transactions;")
+
+#Selecting rows by condition Identify transactions greater than $100
+dbGetQuery(con, "SELECT * FROM transactions WHERE PurchAmount > 100;")
+
+#Select multiple columns by column name
+dbGetQuery(con, "SELECT Customer, TransDate, PurchAmount FROM transactions;")
+
+#Selecting rows and columns: Combine operations to select by row and column
+dbGetQuery(con, "SELECT TransDate, Cost FROM transactions 
+           WHERE PurchAmount > 100;")
+
+#Aggregate: Apply an aggregating function on a variable by an aggregating dimension
+dbGetQuery(con, "SELECT Customer, SUM(PurchAmount) 
+           AS AggPurch FROM transactionsGROUP BY Customer;")
+
+#Apply an aggregating function to multiple  variables by an aggregating dimension
+dbGetQuery(con, "SELECT Customer, SUM(PurchAmount) AS AggPurch, SUM(Quantity) 
+           AS AggQuant FROM transactions GROUP BY Customer;")
+
+#Merge: Inner Join
+dbGetQuery(con, "SELECT * FROM A INNER JOIN B ON A.ID=B.ID;")
+
+#Merge: Inner join by multiple variables
+dbGetQuery(con, "SELECT * FROM A INNER JOIN B 
+           ON A.ID=B.ID AND A.TransDate=B.Transdate;")
+
+#Ex.9
+library(data.table)
+library(lubridate)
+library(RSQLite)
+
+# Build database connection
+con <- dbConnect(drv=RSQLite::SQLite(), dbname="database.sqlite")
+transactions <- dbReadTable(conn=con, name = "transactions")
+
+#1.
+dbGetQuery(con, "SELECT DISTINCT Customer FROM 
+           transactions WHERE TransDate='2012-06-06 00:00';")
+
+dbGetQuery(con, "SELECT COUNT(DISTINCT Customer) FROM 
+           transactions WHERE TransDate='2012-06-06 00:00';")
+
+#2.
+dbSendQuery(con, "ALTER TABLE transactions ADD NetSales;") # Add empty column
+dbSendQuery(con, "UPDATE transactions SET NetSales=PurchAmount-Cost;") # Set values
+dbGetQuery(con,"SELECT * FROM transactions LIMIT 3;")
+
+
+#3.
+dbGetQuery(con, "SELECT date(TransDate, 'start of year') AS Year, 
+           AVG(PurchAmount) AS AvgPurch, AVG(Cost) AS AvgCost
+           FROM transactions
+           GROUP BY date(TransDate, 'start of year')
+           LIMIT 5;")
+
+#4
+dbGetQuery(con, "SELECT * FROM transactions
+           INNER JOIN demographics
+           ON transactions.Customer=demographics.Customer 
+           AND transactions.TransDate=demographics.JoinDate
+           LIMIT 5;")
+
+# Close connection ####
+dbDisconnect(con)
+
+
+
+
